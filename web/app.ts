@@ -58,7 +58,9 @@ function drawGraph(value: unknown): void {
   svg.replaceChildren();
   const make = (name: string) => document.createElementNS("http://www.w3.org/2000/svg", name);
   const shown = graph.nodes.slice(0, 5);
-  const positions = new Map(shown.map((n, i) => [n.id, 40 + i * 110]));
+  const positions = new Map(
+    shown.map((n, i) => [n.id, shown.length === 1 ? 280 : 70 + (i * 420) / (shown.length - 1)]),
+  );
   for (const edge of graph.edges) {
     const x1 = positions.get(edge.from),
       x2 = positions.get(edge.to);
