@@ -78,3 +78,30 @@ test("unknown schema properties and invalid bounds reject", async () => {
   g.query.max_depth = 99;
   assert.throws(() => analyze(g));
 });
+
+test("candidate role assumption retains trust prerequisites and GCP case semantics", async () => {
+  const g = await sample();
+  g.nodes.push({
+    id: "automation-role",
+    tenant: g.tenant,
+    cloud: "aws",
+    kind: "role",
+    label: "Synthetic automation role",
+  });
+  const grant = g.edges[g.edges.length - 1]!;
+  g.edges.push({
+    ...g.edges[0]!,
+    id: "assumption",
+    from: grant.from,
+    to: "automation-role",
+    relation: "can_assume",
+    conditions: "unresolved",
+  });
+  grant.from = "automation-role";
+  const report = analyze(g);
+  assert.ok(report.paths[0]!.unresolved.some((reason) => reason.includes("trust")));
+  assert.equal(report.effective_permissions.status, "not_proven");
+  const cloud = graphSchema.parse(await load("samples/gcp.json"));
+  cloud.query.action = cloud.query.action.toUpperCase();
+  assert.equal(analyze(cloud).paths.length, 0);
+});

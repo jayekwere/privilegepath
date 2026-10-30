@@ -1,6 +1,6 @@
 {
   "date": "2026-10-30",
-  "typescript_tests": 7,
+  "typescript_tests": 8,
   "python_tests": 3,
   "browser_tests": 1,
   "local_browser": "passed",
@@ -10,6 +10,7 @@
     "read_only": true,
     "capabilities": "dropped"
   },
-  "typescript_coverage_report": "start of coverage report\n\u2139 ----------------------------------------------------------\n\u2139 file      | line % | branch % | funcs % | uncovered lines\n\u2139 ----------------------------------------------------------\n\u2139 src       |        |          |         | \n\u2139  graph.ts |  98.44 |    91.80 |   88.89 | 95 105 124\n\u2139  io.ts    |  40.48 |   100.00 |   60.00 | 10-15 17-60\n\u2139 ----------------------------------------------------------\n\u2139 all files |  80.80 |    92.31 |   82.61 | \n\u2139 ----------------------------------------------------------\n\u2139",
-  "scope_note": "Node source coverage includes imported production files and excludes test files. Browser coverage is separate. Python percentage combines statements and branches."
+  "scope_note": "Node source coverage includes imported production files and excludes test files. Browser coverage is separate. Python percentage combines statements and branches.",
+  "node_imported_source_line_coverage_percent": 81.16,
+  "node_imported_source_branch_coverage_percent": 93.94
 }
