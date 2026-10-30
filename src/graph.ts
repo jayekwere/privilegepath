@@ -89,6 +89,8 @@ export function analyze(value: unknown) {
     graph.edges.some((e) => e.tenant !== graph.tenant)
   )
     throw new Error("Cross-tenant graph");
+  if (graph.collection && graph.nodes.some((n) => n.cloud !== graph.collection?.provider))
+    throw new Error("Collection provider does not match graph nodes");
   const principal = nodes.get(graph.query.principal);
   const target = nodes.get(graph.query.resource);
   if (

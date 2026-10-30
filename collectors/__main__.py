@@ -151,6 +151,9 @@ def main(argv: list[str] | None = None) -> None:
         )
     )
 
+    if capture.issues:
+        raise SystemExit(2)
+
 
 if __name__ == "__main__":
     try:

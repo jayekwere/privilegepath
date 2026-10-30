@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import { analyze } from "../src/graph.js";
 
@@ -33,4 +36,26 @@ test("Azure NotActions subtract only that grant and data permissions require an 
   assert.equal(analyze(graph).paths.length, 1);
   delete graph.query.plane;
   assert.throws(() => analyze(graph), /plane/i);
+});
+
+test("partial native collection has a nonzero CLI status and metadata cannot cross cloud boundaries", () => {
+  const graph = native("gcp");
+  assert.equal(analyze(graph).status, "incomplete");
+  const directory = mkdtempSync(join(tmpdir(), "privilegepath-cli-"));
+  try {
+    const path = join(directory, "partial.json");
+    writeFileSync(path, JSON.stringify(graph));
+    const actual = spawnSync(
+      process.execPath,
+      ["--import", "tsx", "src/main.ts", "analyze", path],
+      { encoding: "utf8" },
+    );
+    assert.equal(actual.status, 2, actual.stderr);
+    assert.equal(JSON.parse(actual.stdout).status, "incomplete");
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+  const mixed = native("aws");
+  mixed.collection.provider = "azure";
+  assert.throws(() => analyze(mixed), /provider/);
 });

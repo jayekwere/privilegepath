@@ -246,7 +246,12 @@ class BoundaryTests(unittest.TestCase):
                 out = Path(root) / "graph.json"
                 stdout = io.StringIO()
                 with contextlib.redirect_stdout(stdout):
-                    main([provider, "--tenant", "alder", "--out", str(out), *args])
+                    if provider == "gcp":
+                        with self.assertRaises(SystemExit) as incomplete:
+                            main([provider, "--tenant", "alder", "--out", str(out), *args])
+                        self.assertEqual(incomplete.exception.code, 2)
+                    else:
+                        main([provider, "--tenant", "alder", "--out", str(out), *args])
                 graph = json.loads(out.read_text())
                 snapshot = json.loads(out.with_suffix(".snapshot.json").read_text())
                 self.assertEqual(graph["collection"]["snapshot_sha256"], sha(snapshot))

@@ -13,7 +13,7 @@ async function main(): Promise<void> {
     await load(command === "demo" ? "samples/aws.json" : (process.argv[3] ?? "")),
   );
   console.log(JSON.stringify(result, null, 2));
-  if (result.truncated) process.exitCode = 2;
+  if (result.status === "incomplete") process.exitCode = 2;
 }
 main().catch((error) => {
   console.error(error instanceof Error ? error.message : "Analysis failed");

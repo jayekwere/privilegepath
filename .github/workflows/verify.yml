@@ -39,7 +39,13 @@ jobs:
       - run: |
           for provider in aws azure gcp; do
             python -m collectors.fixtures "$provider" --out "artifacts/synthetic-$provider.json"
-            node dist/src/main.js analyze "artifacts/synthetic-$provider.json" > "artifacts/synthetic-$provider-analysis.json"
+            if [ "$provider" = gcp ]; then
+              collector_status=0
+              node dist/src/main.js analyze "artifacts/synthetic-$provider.json" > "artifacts/synthetic-$provider-analysis.json" || collector_status=$?
+              test "$collector_status" -eq 2
+            else
+              node dist/src/main.js analyze "artifacts/synthetic-$provider.json" > "artifacts/synthetic-$provider-analysis.json"
+            fi
           done
       - run: npm audit --audit-level=high
       - run: npx playwright install --with-deps chromium
