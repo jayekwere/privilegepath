@@ -4,6 +4,8 @@
 
 PrivilegePath analyzes observed IAM relationships using a TypeScript CLI and stateless local web evaluator. A restricted Python importer accepts saved exports. A separate operator-only Python CLI collects native read-only AWS, Azure and GCP evidence. The final Node container has no Python collector runtime. Output paths and recommendations describe observations and unresolved prerequisites; effective permissions always remain not_proven. One independent fresh-context read-only architecture review informed this model; it does not establish audit coverage or live account acceptance.
 
+AWS native acceptance exercised 14 API calls and retained a private snapshot. Collection and analysis returned partial status, with effective permissions remaining not_proven; policy variables were not projected without context. Temporary test identities were cleaned up. Native identities/exports stayed private, and the public receipt contains source commits, counts and the snapshot digest (`docs/aws-live-verification.json:2`).
+
 | Component | Source and role |
 | --- | --- |
 | CLI and local web startup | `src/main.ts:4` |
@@ -44,7 +46,7 @@ Capture limits requests, aggregate evidence bytes, observations and issues; nati
 
 Observation pointers and SHA-256 references preserve local integrity relationships; they are not cloud signatures. The analyzer does not authenticate an arbitrary submitted snapshot. Collection complete means only the declared observation scope completed. Permissions always remain not_proven, and missing paths never prove absence of access or safe removal (`collectors/core.py:188`, `collectors/core.py:273`, `src/graph.ts:83`).
 
-Private creation requests 0700 for new parent directories and 0600 for files, but existing parent privacy and ownership remain host responsibilities. Graph and snapshot publish separately, not as an atomic pair. Build exclusions cover private paths, snapshots, keys and environment files; arbitrary sensitive output names still require private placement (`collectors/core.py:304`, `.dockerignore:11`). Live account acceptance remains unverified. There is no authenticated multi-tenant storage service, IAM mutation engine or provider authorization simulator.
+Private creation requests 0700 for new parent directories and 0600 for files, but existing parent privacy and ownership remain host responsibilities. Graph and snapshot publish separately, not as an atomic pair. Build exclusions cover private paths, snapshots, keys and environment files; arbitrary sensitive output names still require private placement (`collectors/core.py:304`, `.dockerignore:11`). AWS live acceptance recorded a private native snapshot and partial collection because policy variables required context. Azure/GCP account acceptance remains unverified. There is no authenticated multi-tenant storage service, IAM mutation engine or provider authorization simulator.
 
 ## Attack Surface, Mitigations, and Attacker Stories
 
@@ -64,4 +66,4 @@ These are review hypotheses, not validated findings.
 Critical requires evidence of broad unauthorized authority beyond this read-only design; an observed grant path is not such evidence. High can apply to a concrete collector credential disclosure to an attacker-controlled recipient. Medium covers bounded confidentiality, availability or consequential evidence-integrity failures with actual prerequisites. Low covers local-only defects or misleading presentation without new authority. A graph's synthetic tenant label is not an authenticated account boundary. Trusted host control, speculative effective access and missing live credentials do not by themselves establish a finding.
 
 Repository: https://github.com/jayekwere/privilegepath
-Version: 7f91ad8d37f2d9b4e011e374d2161cd6e56b5593
+Version: d5c659826636a1112519f937b4bcea5050b19f68
