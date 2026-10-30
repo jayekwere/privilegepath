@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "records": [
+    {
+      "from": "alex",
+      "to": "readers",
+      "relation": "member_of",
+      "effect": "allow",
+      "actions": [],
+      "conditions": "none"
+    },
+    {
+      "from": "readers",
+      "to": "archive",
+      "relation": "grant",
+      "effect": "allow",
+      "actions": [
+        "storage.objects.get"
+      ],
+      "conditions": "none"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "tenant": "alder",
+  "cloud": "aws",
+  "collected_at": "2026-10-30T10:00:00Z",
+  "principals": [
+    {
+      "id": "alex",
+      "kind": "identity",
+      "label": "Synthetic identity"
+    }
+  ],
+  "resources": [
+    {
+      "id": "archive",
+      "kind": "resource",
+      "label": "Synthetic archive"
+    }
+  ],
+  "records": [
+    {
+      "principal": "alex",
+      "resource": "archive",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "s3:GetObject"
+        }
+      ]
+    }
+  ],
+  "query": {
+    "principal": "alex",
+    "resource": "archive",
+    "action": "s3:GetObject",
+    "max_depth": 5
+  }
+}

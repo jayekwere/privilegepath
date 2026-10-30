@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "tenant": "alder",
+  "nodes": [
+    {
+      "id": "alex",
+      "tenant": "alder",
+      "cloud": "azure",
+      "kind": "identity",
+      "label": "Synthetic analyst"
+    },
+    {
+      "id": "readers",
+      "tenant": "alder",
+      "cloud": "azure",
+      "kind": "group",
+      "label": "Storage readers"
+    },
+    {
+      "id": "archive",
+      "tenant": "alder",
+      "cloud": "azure",
+      "kind": "resource",
+      "label": "Synthetic archive"
+    }
+  ],
+  "edges": [
+    {
+      "id": "membership",
+      "tenant": "alder",
+      "from": "alex",
+      "to": "readers",
+      "relation": "member_of",
+      "effect": "allow",
+      "actions": [],
+      "conditions": "none",
+      "evidence": {
+        "source": "samples/azure-relationships.json",
+        "pointer": "/records/0",
+        "collected_at": "2026-10-30T10:00:00Z",
+        "sha256": "cd8b5c863941f6d3dbd7f41237cfa4339b9ad24d41498a0139455300e42775e1"
+      }
+    },
+    {
+      "id": "read-grant",
+      "tenant": "alder",
+      "from": "readers",
+      "to": "archive",
+      "relation": "grant",
+      "effect": "allow",
+      "actions": [
+        "Microsoft.Storage/storageAccounts/read"
+      ],
+      "conditions": "none",
+      "evidence": {
+        "source": "samples/azure-relationships.json",
+        "pointer": "/records/1",
+        "collected_at": "2026-10-30T10:00:00Z",
+        "sha256": "6c1bd5ee6e37929319b970cbf1598de3dea79b62e0638b620c5a9e34601f588a"
+      }
+    }
+  ],
+  "query": {
+    "principal": "alex",
+    "resource": "archive",
+    "action": "Microsoft.Storage/storageAccounts/read",
+    "max_depth": 5
+  }
+}

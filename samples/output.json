@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "status": "analysis_complete",
+  "tenant": "alder",
+  "query": {
+    "principal": "alex",
+    "resource": "archive",
+    "action": "s3:GetObject",
+    "max_depth": 5
+  },
+  "graph_sha256": "05120a05efe8b5b28bad301cd2133435fbf3c102c1717d986798460c1336c3d9",
+  "paths": [
+    {
+      "classification": "candidate_grant_path",
+      "summary": "Synthetic analyst: observed allow for s3:GetObject",
+      "edge_ids": [
+        "membership",
+        "read-grant"
+      ],
+      "evidence": [
+        {
+          "source": "samples/aws-relationships.json",
+          "pointer": "/records/0",
+          "collected_at": "2026-10-30T10:00:00Z",
+          "sha256": "cd8b5c863941f6d3dbd7f41237cfa4339b9ad24d41498a0139455300e42775e1"
+        },
+        {
+          "source": "samples/aws-relationships.json",
+          "pointer": "/records/1",
+          "collected_at": "2026-10-30T10:00:00Z",
+          "sha256": "94f78c633f0c8c3b8d4fd16ca15ff1bb48ba7582c2457ea233408b81ac7ff87c"
+        }
+      ],
+      "unresolved": [
+        "Provider authorization was not evaluated"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "edge_ids": [
+        "membership",
+        "read-grant"
+      ],
+      "proposal": "The evidenced terminal grant is explicit. This snapshot supplies no usage evidence that justifies removing it. Validate its scope and owner need.",
+      "evidence": [
+        {
+          "source": "samples/aws-relationships.json",
+          "pointer": "/records/0",
+          "collected_at": "2026-10-30T10:00:00Z",
+          "sha256": "cd8b5c863941f6d3dbd7f41237cfa4339b9ad24d41498a0139455300e42775e1"
+        },
+        {
+          "source": "samples/aws-relationships.json",
+          "pointer": "/records/1",
+          "collected_at": "2026-10-30T10:00:00Z",
+          "sha256": "94f78c633f0c8c3b8d4fd16ca15ff1bb48ba7582c2457ea233408b81ac7ff87c"
+        }
+      ],
+      "automatic_removal_safe": false
+    }
+  ],
+  "effective_permissions": {
+    "status": "not_proven",
+    "proven": [],
+    "reason": "Observed grant relationships do not establish effective access. Provider denies, boundaries, trust, conditions, sessions, hierarchy and resource policies require provider-specific evaluation."
+  },
+  "traversed_states": 2,
+  "truncated": false
+}
