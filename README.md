@@ -63,7 +63,7 @@ CI runs lint, strict TypeScript checks, unit/adversarial tests, measured coverag
 
 AWS SCPs, resource policies, permission boundaries, sessions and trust semantics; Azure deny assignments and PIM activation; and GCP deny policies, principal access boundaries and condition evaluation are not evaluated. The collector resolves Azure role definitions and applicable inherited assignments, and reads accessible GCP ancestor allow policies. Role assumption edges are candidates, not proof that an STS exchange or token issuance would succeed.
 
-Read-only cloud account collection is implemented and contract tested; live account acceptance remains unverified. Authorization simulation is unimplemented. Imported graph hashes and timestamps are caller assertions unless checked against an included source record. The separate collector binds native observations into private snapshots. The analyzer never authenticates a cloud snapshot, modifies IAM, or infers that unused permissions are safe to remove. The local UI has no authenticated multi-tenant storage. Tenant checks enforce consistency inside a submitted graph. Evidence files can contain sensitive identity metadata; keep real exports private.
+Read-only cloud account collection is implemented and contract tested; AWS live acceptance is recorded with partial collection; Azure/GCP account acceptance remains unverified. Authorization simulation is unimplemented. Imported graph hashes and timestamps are caller assertions unless checked against an included source record. The separate collector binds native observations into private snapshots. The analyzer never authenticates a cloud snapshot, modifies IAM, or infers that unused permissions are safe to remove. The local UI has no authenticated multi-tenant storage. Tenant checks enforce consistency inside a submitted graph. Evidence files can contain sensitive identity metadata; keep real exports private.
 
  
 
@@ -71,4 +71,6 @@ See [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md). MIT cover
 
 ## Native cloud collection
 
-Read-only AWS, Azure and GCP collectors now preserve native policy evidence and emit analyzer-ready graphs. They are implemented and contract tested; live account acceptance remains unverified. Use [live collectors](docs/live-collectors.md) for private account setup, exact coverage, offline native fixtures and explicit scope limits. Collection completeness never proves effective access.
+Read-only AWS, Azure and GCP collectors now preserve native policy evidence and emit analyzer-ready graphs. They are implemented and contract tested; AWS live acceptance is recorded with partial collection; Azure/GCP account acceptance remains unverified. Use [live collectors](docs/live-collectors.md) for private account setup, exact coverage, offline native fixtures and explicit scope limits. Collection completeness never proves effective access.
+
+AWS account acceptance exercised 14 native API calls and preserved a private native snapshot. It returned partial coverage because a policy used resource variables requiring context, and analysis retained `effective_permissions: not_proven`. [The live receipt](docs/aws-live-verification.json) records source commits and snapshot digest. Azure/GCP account acceptance remains unverified.

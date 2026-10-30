@@ -2,7 +2,7 @@
 
 `python3 -m collectors` collects native IAM evidence through official cloud APIs and existing local credentials. It writes a graph for the TypeScript analyzer plus a separate native snapshot. Both files are created privately with mode 0600 and are never overwritten. Use `.private/` or another private directory. Do not commit real account inventories.
 
-The collectors are implemented and contract tested. AWS, Azure and GCP account acceptance is unverified until a live evidence receipt is recorded. Synthetic fixtures do not establish account verification.
+The collectors are implemented and contract tested. AWS live acceptance is recorded in [the native receipt](aws-live-verification.json): 14 API calls, a retained private snapshot and partial coverage due to policy variables requiring context. Analysis kept effective permissions unproven. Azure and GCP account acceptance remains unverified. Synthetic fixtures do not establish account verification.
 
 | Provider | Collected evidence | Explicit limitations |
 | --- | --- | --- |
@@ -57,3 +57,5 @@ The clients enforce fixed HTTPS authorities, reject credential-bearing or redire
 The verification workflow reports branch-inclusive Python collector coverage with tests and synthetic fixture definitions excluded. It also feeds every native provider graph through the TypeScript schema and path analyzer. Tests cover account mismatches, managed-policy version identity, missing access, pagination escape, Azure exclusions/planes, candidate trust and private output handling.
 
 API contracts: [AWS account authorization details](https://docs.aws.amazon.com/IAM/latest/APIReference/API_GetAccountAuthorizationDetails.html), [Azure scoped role assignments](https://learn.microsoft.com/rest/api/authorization/role-assignments/list-for-scope), [GCP project IAM policies](https://docs.cloud.google.com/resource-manager/reference/rest/v3/projects/getIamPolicy).
+
+The AWS acceptance run used an existing authorized administrator role and a dedicated temporary IAM principal with no grants. Collection and analysis both returned exit 2 for partial coverage. Native IAM identities, exports and credentials were kept private; only the snapshot digest, counts and bounded result are published. The temporary key and principal were deleted after the response verification.
