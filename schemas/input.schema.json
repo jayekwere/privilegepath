@@ -9,7 +9,7 @@
     "tenant": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 256
+      "maxLength": 2048
     },
     "nodes": {
       "maxItems": 5000,
@@ -20,12 +20,12 @@
           "id": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 256
+            "maxLength": 2048
           },
           "tenant": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 256
+            "maxLength": 2048
           },
           "cloud": {
             "type": "string",
@@ -69,22 +69,22 @@
           "id": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 256
+            "maxLength": 2048
           },
           "tenant": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 256
+            "maxLength": 2048
           },
           "from": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 256
+            "maxLength": 2048
           },
           "to": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 256
+            "maxLength": 2048
           },
           "relation": {
             "type": "string",
@@ -119,6 +119,35 @@
               "none",
               "unresolved"
             ]
+          },
+          "constraints": {
+            "type": "object",
+            "properties": {
+              "resource_patterns": {
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2048
+                }
+              },
+              "excluded_actions": {
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 256
+                }
+              },
+              "plane": {
+                "type": "string",
+                "enum": [
+                  "control",
+                  "data"
+                ]
+              }
+            },
+            "additionalProperties": false
           },
           "evidence": {
             "type": "object",
@@ -166,23 +195,86 @@
         "additionalProperties": false
       }
     },
+    "collection": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "aws",
+            "azure",
+            "gcp"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "collected_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        },
+        "issues": {
+          "maxItems": 1000,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "snapshot_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "api_calls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200
+        }
+      },
+      "required": [
+        "provider",
+        "scope",
+        "collected_at",
+        "status",
+        "issues",
+        "snapshot_sha256",
+        "api_calls"
+      ],
+      "additionalProperties": false
+    },
     "query": {
       "type": "object",
       "properties": {
         "principal": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 256
+          "maxLength": 2048
         },
         "resource": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 256
+          "maxLength": 2048
         },
         "action": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256
+        },
+        "plane": {
+          "type": "string",
+          "enum": [
+            "control",
+            "data"
+          ]
         },
         "max_depth": {
           "default": 5,

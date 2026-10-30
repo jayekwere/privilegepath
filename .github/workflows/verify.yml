@@ -29,6 +29,7 @@ jobs:
       
       - run: npm run verify
       - run: mkdir -p artifacts && node dist/src/main.js demo > artifacts/output.json && cmp samples/output.json artifacts/output.json
+      - run: node --import tsx scripts/schema.ts > artifacts/input.schema.json && cmp schemas/input.schema.json artifacts/input.schema.json
       - run: python -m ruff check importer collectors && python -m mypy --strict importer collectors
       - run: python -m coverage run --branch --source=collectors -m unittest collectors.test_collectors && python -m coverage xml --omit="collectors/test_*,collectors/fixtures.py" -o artifacts/collector-coverage.xml
       - run: python -m coverage report --omit="collectors/test_*,collectors/fixtures.py" --fail-under=80
