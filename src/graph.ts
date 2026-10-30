@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { digest } from "./io.js";
 
-const id = z.string().min(1).max(256);
+const id = z.string().min(1).max(2048);
 const evidence = z
   .object({
     source: z.string().min(1).max(512),
@@ -29,6 +29,14 @@ const edge = z
     effect: z.enum(["allow", "deny"]).default("allow"),
     actions: z.array(z.string().min(1).max(256)).max(1000).default([]),
     conditions: z.enum(["none", "unresolved"]).default("none"),
+    constraints: z
+      .object({
+        resource_patterns: z.array(z.string().max(2048)).max(1000).optional(),
+        excluded_actions: z.array(z.string().max(256)).max(1000).optional(),
+        plane: z.enum(["control", "data"]).optional(),
+      })
+      .strict()
+      .optional(),
     evidence,
   })
   .strict();
@@ -38,11 +46,24 @@ export const graphSchema = z
     tenant: id,
     nodes: z.array(node).max(5000),
     edges: z.array(edge).max(20000),
+    collection: z
+      .object({
+        provider: z.enum(["aws", "azure", "gcp"]),
+        scope: z.string().max(4096),
+        collected_at: z.iso.datetime(),
+        status: z.enum(["complete", "partial"]),
+        issues: z.array(z.string().max(512)).max(1000),
+        snapshot_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+        api_calls: z.number().int().nonnegative().max(200),
+      })
+      .strict()
+      .optional(),
     query: z
       .object({
         principal: id,
         resource: id,
         action: z.string().min(1).max(256),
+        plane: z.enum(["control", "data"]).optional(),
         max_depth: z.number().int().min(1).max(8).default(5),
       })
       .strict(),
@@ -73,7 +94,7 @@ export function analyze(value: unknown) {
   if (
     !principal ||
     !target ||
-    principal.kind !== "identity" ||
+    !["identity", "role"].includes(principal.kind) ||
     target.kind !== "resource" ||
     principal.cloud !== target.cloud
   )
@@ -129,6 +150,15 @@ export function analyze(value: unknown) {
       }
       const next = [...state.edges, e];
       if (e.relation === "grant") {
+        if (e.constraints?.plane && graph.query.plane === undefined)
+          throw new Error("Azure permission plane must be explicit");
+        if (e.constraints?.plane && e.constraints.plane !== graph.query.plane) continue;
+        if (
+          e.constraints?.excluded_actions?.some((pattern) =>
+            matches(pattern, graph.query.action, principal.cloud),
+          )
+        )
+          continue;
         if (
           e.to !== target.id ||
           !e.actions.some((a) => matches(a, graph.query.action, principal.cloud))
@@ -174,7 +204,9 @@ export function analyze(value: unknown) {
     }));
   return {
     schema_version: "1.0",
-    status: truncated ? "incomplete" : "analysis_complete",
+    status:
+      truncated || graph.collection?.status === "partial" ? "incomplete" : "analysis_complete",
+    collection: graph.collection,
     tenant: graph.tenant,
     query: graph.query,
     graph_sha256: digest(JSON.stringify(graph)),

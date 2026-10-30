@@ -29,10 +29,17 @@ jobs:
       
       - run: npm run verify
       - run: mkdir -p artifacts && node dist/src/main.js demo > artifacts/output.json && cmp samples/output.json artifacts/output.json
-      - run: python -m ruff check importer && python -m mypy --strict importer
+      - run: python -m ruff check importer collectors && python -m mypy --strict importer collectors
+      - run: python -m coverage run --branch --source=collectors -m unittest collectors.test_collectors && python -m coverage xml --omit="collectors/test_*,collectors/fixtures.py" -o artifacts/collector-coverage.xml
+      - run: python -m coverage report --omit="collectors/test_*,collectors/fixtures.py" --fail-under=80
       - run: python -m unittest discover -s importer -p 'test_*.py'
       - run: python importer/normalize.py samples/aws-export.json artifacts/imported.json
       - run: node dist/src/main.js analyze artifacts/imported.json
+      - run: |
+          for provider in aws azure gcp; do
+            python -m collectors.fixtures "$provider" --out "artifacts/synthetic-$provider.json"
+            node dist/src/main.js analyze "artifacts/synthetic-$provider.json" > "artifacts/synthetic-$provider-analysis.json"
+          done
       - run: npm audit --audit-level=high
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser

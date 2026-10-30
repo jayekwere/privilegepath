@@ -63,8 +63,12 @@ CI runs lint, strict TypeScript checks, unit/adversarial tests, measured coverag
 
 AWS SCPs, resource policies, permission boundaries, sessions and trust semantics; Azure deny assignments, PIM activation, role-definition resolution and inherited scopes; and GCP deny policies, principal access boundaries, conditional bindings and hierarchy inheritance are not evaluated. Role assumption edges are candidates, not proof that an STS exchange or token issuance would succeed.
 
-Cloud account collection and authorization simulation are **unverified and unimplemented**. Evidence hashes and timestamps are caller assertions unless checked against an included source record. The analyzer never authenticates a cloud snapshot, modifies IAM, or infers that unused permissions are safe to remove. The local UI has no authenticated multi-tenant storage. Tenant checks enforce consistency inside a submitted graph. Evidence files can contain sensitive identity metadata; keep real exports private.
+Read-only cloud account collection is implemented and contract tested; live account acceptance remains unverified. Authorization simulation is unimplemented. Imported graph hashes and timestamps are caller assertions unless checked against an included source record. The separate collector binds native observations into private snapshots. The analyzer never authenticates a cloud snapshot, modifies IAM, or infers that unused permissions are safe to remove. The local UI has no authenticated multi-tenant storage. Tenant checks enforce consistency inside a submitted graph. Evidence files can contain sensitive identity metadata; keep real exports private.
 
  
 
 See [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md). MIT covers this repository's original code; dependencies retain their respective licenses.
+
+## Native cloud collection
+
+Read-only AWS, Azure and GCP collectors now preserve native policy evidence and emit analyzer-ready graphs. They are implemented and contract tested; live account acceptance remains unverified. Use [live collectors](docs/live-collectors.md) for private account setup, exact coverage, offline native fixtures and explicit scope limits. Collection completeness never proves effective access.
