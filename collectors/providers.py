@@ -9,6 +9,11 @@ from urllib.parse import unquote, urlsplit
 from collectors.core import Capture, CloudError, Graph, Json
 
 
+def iam_matches(value: str, pattern: str) -> bool:
+    """IAM wildcards are * and ?; brackets are literal resource characters."""
+    return fnmatch.fnmatchcase(value, pattern.replace("[", "[[]"))
+
+
 def strings(value: Any) -> list[str]:
     result = [value] if isinstance(value, str) else value
     if (
@@ -130,7 +135,7 @@ def aws(
                 )
                 constraints = {"resource_patterns": resources}
                 conditional = bool(statement.get("Condition"))
-                if any(fnmatch.fnmatchcase(resource, pattern) for pattern in resources):
+                if any(iam_matches(resource, pattern) for pattern in resources):
                     graph.edge(
                         owner,
                         target,
@@ -142,10 +147,10 @@ def aws(
                         constraints=constraints,
                     )
                 if statement["Effect"] == "Allow" and any(
-                    fnmatch.fnmatchcase("sts:assumerole", pattern.lower()) for pattern in actions
+                    iam_matches("sts:assumerole", pattern.lower()) for pattern in actions
                 ):
                     for role_arn, role_id in roles.items():
-                        if any(fnmatch.fnmatchcase(role_arn, pattern) for pattern in resources):
+                        if any(iam_matches(role_arn, pattern) for pattern in resources):
                             graph.edge(
                                 owner,
                                 role_id,

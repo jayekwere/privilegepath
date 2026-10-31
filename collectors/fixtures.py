@@ -28,7 +28,7 @@ class Native:
         return copy.deepcopy(self.responses[key])
 
 
-def aws_fixture() -> tuple[dict[str, Any], Capture]:
+def aws_fixture(source: str = "native-fixture.json") -> tuple[dict[str, Any], Capture]:
     native = Native(
         {
             "get-caller-identity": {"Account": ACCOUNT, "Arn": PRINCIPAL},
@@ -94,11 +94,11 @@ def aws_fixture() -> tuple[dict[str, Any], Capture]:
             },
         }
     )
-    cap = Capture("aws", native, source="native-fixture.json", at=AT)
+    cap = Capture("aws", native, source=source, at=AT)
     return aws(cap, "alder", ACCOUNT, PRINCIPAL, RESOURCE, "s3:GetObject"), cap
 
 
-def azure_fixture() -> tuple[dict[str, Any], Capture]:
+def azure_fixture(source: str = "native-fixture.json") -> tuple[dict[str, Any], Capture]:
     resource = f"/subscriptions/{SUB}"
     native = Native(
         {
@@ -134,11 +134,11 @@ def azure_fixture() -> tuple[dict[str, Any], Capture]:
             },
         }
     )
-    cap = Capture("azure", native, source="native-fixture.json", at=AT)
+    cap = Capture("azure", native, source=source, at=AT)
     return azure(cap, "alder", SUB, OID, resource, "Microsoft.Storage/storageAccounts/read"), cap
 
 
-def gcp_fixture() -> tuple[dict[str, Any], Capture]:
+def gcp_fixture(source: str = "native-fixture.json") -> tuple[dict[str, Any], Capture]:
     native = Native(
         {
             "https://cloudresourcemanager.googleapis.com/v3/projects/synthetic-project": {
@@ -169,7 +169,7 @@ def gcp_fixture() -> tuple[dict[str, Any], Capture]:
             },
         }
     )
-    cap = Capture("gcp", native, source="native-fixture.json", at=AT)
+    cap = Capture("gcp", native, source=source, at=AT)
     return gcp(
         cap,
         "alder",
@@ -189,8 +189,11 @@ def main() -> None:
     parser.add_argument("provider", choices=["aws", "azure", "gcp"])
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    graph, cap = {"aws": aws_fixture, "azure": azure_fixture, "gcp": gcp_fixture}[args.provider]()
-    private_json(args.out.with_suffix(".native.json"), cap.snapshot())
+    snapshot_path = args.out.with_suffix(".native.json")
+    graph, cap = {"aws": aws_fixture, "azure": azure_fixture, "gcp": gcp_fixture}[args.provider](
+        snapshot_path.name
+    )
+    private_json(snapshot_path, cap.snapshot())
     private_json(args.out, graph)
     print("Synthetic native collector demo written; effective access remains unproven")
 

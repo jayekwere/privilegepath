@@ -72,12 +72,39 @@ export const graphSchema = z
 export type Graph = z.infer<typeof graphSchema>;
 type Edge = z.infer<typeof edge>;
 
-function matches(pattern: string, action: string, cloud: string): boolean {
-  const escaped = pattern
-    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*/g, ".*")
-    .replace(/\?/g, ".");
-  return new RegExp(`^${escaped}$`, cloud === "gcp" ? "" : "i").test(action);
+class MatchBudgetExceeded extends Error {}
+
+function matches(
+  pattern: string,
+  action: string,
+  cloud: string,
+  spend: (units: number) => void,
+): boolean {
+  spend((pattern.length + 1) * (action.length + 1));
+  let previous = Array<boolean>(action.length + 1).fill(false);
+  previous[0] = true;
+  for (let i = 0; i < pattern.length; i++) {
+    const token = pattern[i]!;
+    const literal =
+      token === "*" || token === "?"
+        ? null
+        : new RegExp(
+            `^${token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+            cloud === "gcp" ? "" : "i",
+          );
+    const current = Array<boolean>(action.length + 1).fill(false);
+    current[0] = token === "*" && previous[0]!;
+    for (let j = 1; j <= action.length; j++) {
+      const character = action[j - 1]!;
+      const wildcardCharacter = !/[\r\n\u2028\u2029]/.test(character);
+      current[j] =
+        token === "*"
+          ? previous[j]! || (wildcardCharacter && current[j - 1]!)
+          : previous[j - 1]! && (token === "?" ? wildcardCharacter : literal!.test(character));
+    }
+    previous = current;
+  }
+  return previous[action.length]!;
 }
 
 export function analyze(value: unknown) {
@@ -136,60 +163,70 @@ export function analyze(value: unknown) {
   let traversed = 0;
   let cost = 0;
   let truncated = false;
-  while (queue.length) {
-    const state = queue.shift();
-    if (!state) break;
-    if (++traversed > 10000) {
-      truncated = true;
-      break;
-    }
-    for (const e of outgoing.get(state.at) ?? []) {
-      cost += Math.max(1, e.actions.length);
-      if (cost > 50000 || paths.length >= 1000 || queue.length >= 10000) {
+  let matchingWork = 0;
+  const spend = (units: number) => {
+    matchingWork += units;
+    if (matchingWork > 2_000_000) throw new MatchBudgetExceeded();
+  };
+  try {
+    while (queue.length) {
+      const state = queue.shift();
+      if (!state) break;
+      if (++traversed > 10000) {
         truncated = true;
-        queue.length = 0;
         break;
       }
-      const next = [...state.edges, e];
-      if (e.relation === "grant") {
-        if (e.constraints?.plane && graph.query.plane === undefined)
-          throw new Error("Azure permission plane must be explicit");
-        if (e.constraints?.plane && e.constraints.plane !== graph.query.plane) continue;
-        if (
-          e.constraints?.excluded_actions?.some((pattern) =>
-            matches(pattern, graph.query.action, principal.cloud),
-          )
-        )
-          continue;
-        if (
-          e.to !== target.id ||
-          !e.actions.some((a) => matches(a, graph.query.action, principal.cloud))
-        )
-          continue;
-        const unresolved = [
-          "Provider authorization was not evaluated",
-          ...next
-            .filter((x) => x.conditions === "unresolved")
-            .map((x) => `Unresolved condition on ${x.id}`),
-          ...next
-            .filter((x) => x.relation === "can_assume")
-            .map((x) => `Role trust and session constraints unverified on ${x.id}`),
-        ];
-        paths.push({
-          classification: e.effect === "deny" ? "observed_deny" : "candidate_grant_path",
-          summary: `${principal.label}: observed ${e.effect} for ${graph.query.action}`,
-          edge_ids: next.map((x) => x.id),
-          evidence: next.map((x) => x.evidence),
-          unresolved,
-        });
-      } else if (!state.visited.has(e.to)) {
-        if (next.length >= graph.query.max_depth) {
+      for (const e of outgoing.get(state.at) ?? []) {
+        cost += Math.max(1, e.actions.length);
+        if (cost > 50000 || paths.length >= 1000 || queue.length >= 10000) {
           truncated = true;
-          continue;
+          queue.length = 0;
+          break;
         }
-        queue.push({ at: e.to, edges: next, visited: new Set([...state.visited, e.to]) });
+        const next = [...state.edges, e];
+        if (e.relation === "grant") {
+          if (e.constraints?.plane && graph.query.plane === undefined)
+            throw new Error("Azure permission plane must be explicit");
+          if (e.constraints?.plane && e.constraints.plane !== graph.query.plane) continue;
+          if (
+            e.constraints?.excluded_actions?.some((pattern) =>
+              matches(pattern, graph.query.action, principal.cloud, spend),
+            )
+          )
+            continue;
+          if (
+            e.to !== target.id ||
+            !e.actions.some((a) => matches(a, graph.query.action, principal.cloud, spend))
+          )
+            continue;
+          const unresolved = [
+            "Provider authorization was not evaluated",
+            ...next
+              .filter((x) => x.conditions === "unresolved")
+              .map((x) => `Unresolved condition on ${x.id}`),
+            ...next
+              .filter((x) => x.relation === "can_assume")
+              .map((x) => `Role trust and session constraints unverified on ${x.id}`),
+          ];
+          paths.push({
+            classification: e.effect === "deny" ? "observed_deny" : "candidate_grant_path",
+            summary: `${principal.label}: observed ${e.effect} for ${graph.query.action}`,
+            edge_ids: next.map((x) => x.id),
+            evidence: next.map((x) => x.evidence),
+            unresolved,
+          });
+        } else if (!state.visited.has(e.to)) {
+          if (next.length >= graph.query.max_depth) {
+            truncated = true;
+            continue;
+          }
+          queue.push({ at: e.to, edges: next, visited: new Set([...state.visited, e.to]) });
+        }
       }
     }
+  } catch (error) {
+    if (!(error instanceof MatchBudgetExceeded)) throw error;
+    truncated = true;
   }
   paths.sort((a, b) => a.edge_ids.join(":").localeCompare(b.edge_ids.join(":")));
   const recommendations = paths

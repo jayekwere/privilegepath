@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "audited_revision": "c12a0cf357edb063ab466660e9d75c9268441961",
+  "scope": "All 57 tracked paths at baseline; independent baseline, focused native boundary review and parent validation.",
+  "findings": [
+    {
+      "id": "wildcard-backtracking",
+      "severity": "low",
+      "status": "fixed"
+    },
+    {
+      "id": "malformed-http-target",
+      "severity": "low",
+      "status": "fixed"
+    },
+    {
+      "id": "iam-resource-glob",
+      "severity": "low",
+      "status": "fixed"
+    }
+  ],
+  "changes": [
+    "Bounded dynamic-programming action matching preserves provider case, literal punctuation and UTF-16 semantics. A separate 2,000,000-cell matching budget covers grants and exclusions; exhaustion explicitly returns incomplete.",
+    "Request-target parsing remains inside the HTTP error boundary.",
+    "IAM projection treats brackets literally at resource, action and role-resource gates.",
+    "Offline fixture CLI evidence names its actual private native snapshot."
+  ],
+  "verification": {
+    "typescript_tests": 15,
+    "collector_python_tests": 22,
+    "legacy_importer_python_tests": 3,
+    "browser_tests": 1,
+    "typescript_imported_source_line_coverage_percent": 84.64,
+    "collector_branch_inclusive_coverage_percent_rounded": 83,
+    "lint_and_typechecking": "passed",
+    "restricted_container": "passed",
+    "offline_demo": "byte-identical to samples/output.json",
+    "wildcard_before": "Actual analysis exceeded a 1500 ms external deadline; killed child process.",
+    "wildcard_after": "Both toxic grant and exclusion patterns complete under a 4000 ms child deadline. No performance score is claimed."
+  },
+  "limitations": [
+    "Observed graph paths never prove effective cloud permissions.",
+    "No cloud API calls or IAM mutation were required for this audit.",
+    "Historical AWS acceptance was partial; Azure/GCP account acceptance remains unverified.",
+    "Reference implementation, not production certification."
+  ],
+  "contract_sources": [
+    "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html"
+  ],
+  "hosted_ci": "https://github.com/jayekwere/privilegepath/actions/workflows/verify.yml"
+}

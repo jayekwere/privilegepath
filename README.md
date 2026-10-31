@@ -74,3 +74,5 @@ See [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md). MIT cover
 Read-only AWS, Azure and GCP collectors now preserve native policy evidence and emit analyzer-ready graphs. They are implemented and contract tested; AWS live acceptance is recorded with partial collection; Azure/GCP account acceptance remains unverified. Use [live collectors](docs/live-collectors.md) for private account setup, exact coverage, offline native fixtures and explicit scope limits. Collection completeness never proves effective access.
 
 AWS account acceptance exercised 14 native API calls and preserved a private native snapshot. It returned partial coverage because a policy used resource variables requiring context, and analysis retained `effective_permissions: not_proven`. [The live receipt](docs/aws-live-verification.json) records source commits and snapshot digest. Azure/GCP account acceptance remains unverified.
+
+The [security audit record](docs/security-audit.json) covers bounded wildcard analysis, malformed request containment, IAM resource-pattern fidelity and fixture provenance. The original offline sample output is unchanged.

@@ -31,10 +31,12 @@ Core domain decisions are separated from HTTP, CLI and external integration adap
 
 ## Unresolved integration scope
 
-Provider collection is implemented in a separate Python CLI; account acceptance remains unverified. Authorization simulation is unimplemented. AWS SCPs/boundaries/resource policies/trust, Azure PIM/deny assignments and GCP denies/boundaries are not evaluated. The collector observes applicable Azure scope inheritance and accessible GCP ancestor grants without proving effective access. Missing paths never prove absence of access.
+Provider collection is implemented in a separate Python CLI. Historical AWS acceptance is recorded for its exact source revision in docs/aws-live-verification.json; Azure/GCP account acceptance remains unverified. Authorization simulation is unimplemented. AWS SCPs/boundaries/resource policies/trust, Azure PIM/deny assignments and GCP denies/boundaries are not evaluated. The collector observes applicable Azure scope inheritance and accessible GCP ancestor grants without proving effective access. Missing paths never prove absence of access.
 
 See the README for exact setup, sample outputs, decision semantics and limits. The threat model distinguishes hypotheses from source-established controls.
 
 ## Native collection extension
 
 `collectors/__main__.py` adds an operator-only CLI using private local credentials. `collectors/core.py` constrains native transports and captures provenance; `collectors/providers.py` maps provider grants and hierarchy into graph semantics. [Live collectors](live-collectors.md) defines exact resource scopes and account verification limits. The HTTP evaluator cannot invoke these collectors or supply credentials.
+
+Action matching uses bounded dynamic programming for only * and ? wildcards, with provider case rules and literal punctuation. Both grant and exclusion comparisons consume a 2,000,000-cell matching budget; exhaustion reports incomplete analysis. Native IAM resource patterns additionally preserve literal brackets. The fixture CLI binds evidence source names to its actual native snapshot basename.

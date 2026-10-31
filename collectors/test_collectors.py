@@ -33,6 +33,76 @@ class CollectionTests(unittest.TestCase):
             observation = cap.observations[int(edge["evidence"]["pointer"].rsplit("/", 1)[1])]
             self.assertEqual(sha(observation), edge["evidence"]["sha256"])
 
+    def test_iam_resource_brackets_are_literal_for_grants_and_denies(self) -> None:
+        for effect in ["Allow", "Deny"]:
+            for suffix, expected in [("object[1]", 1), ("object1", 0)]:
+                _, original = aws_fixture()
+                native = original.call
+                assert isinstance(native, Native)
+                page = native.responses["get-account-authorization-details"]
+                page["GroupDetailList"] = []
+                user = page["UserDetailList"][0]
+                user["GroupList"] = []
+                user["AttachedManagedPolicies"] = []
+                statement = user["UserPolicyList"][0]["PolicyDocument"]["Statement"][0]
+                statement.update(Resource="arn:aws:s3:::bucket/object[1]", Effect=effect)
+                graph = aws(
+                    Capture("aws", native),
+                    "alder",
+                    ACCOUNT,
+                    PRINCIPAL,
+                    f"arn:aws:s3:::bucket/{suffix}",
+                    "s3:GetObject",
+                )
+                self.assertEqual(len(graph["edges"]), expected)
+                self.assertEqual(graph["collection"]["status"], "complete")
+                if expected:
+                    self.assertEqual(graph["edges"][0]["effect"], effect.lower())
+
+    def test_iam_glob_syntax_at_all_projection_gates(self) -> None:
+        from collectors.providers import iam_matches
+
+        for value, pattern, expected in [
+            ("object[1]", "object[1]", True),
+            ("object1", "object[1]", False),
+            ("object!", "object[!a]", False),
+            ("object[!a]", "object[!a]", True),
+            ("a/b\nc", "a*?c", True),
+            ("a/b", "a?b", True),
+            ("role/Team1", "role/Team[12]", False),
+            ("role/Team1", "role/Team?", True),
+            ("Role/Team1", "role/*", False),
+            ("sts:assumerole", "st[s]:assumerole", False),
+            ("sts:assumerole", "sts:assume*", True),
+        ]:
+            self.assertEqual(iam_matches(value, pattern), expected, (value, pattern))
+
+    def test_fixture_cli_binds_actual_snapshot_filename(self) -> None:
+        import json
+
+        from collectors.fixtures import main
+
+        for provider in ["aws", "azure", "gcp"]:
+            for name in ["graph.json", "graph.multi.json", "graph"]:
+                with tempfile.TemporaryDirectory() as directory:
+                    path = Path(directory) / name
+                    with patch("sys.argv", ["fixtures", provider, "--out", str(path)]):
+                        main()
+                    graph = json.loads(path.read_text())
+                    snapshot_path = path.with_suffix(".native.json")
+                    snapshot = json.loads(snapshot_path.read_text())
+                    self.assertEqual(graph["collection"]["snapshot_sha256"], sha(snapshot))
+                    self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+                    self.assertEqual(snapshot_path.stat().st_mode & 0o777, 0o600)
+                    for edge in graph["edges"]:
+                        evidence = edge["evidence"]
+                        self.assertEqual(evidence["source"], snapshot_path.name)
+                        item = snapshot["observations"][int(evidence["pointer"].rsplit("/", 1)[1])]
+                        self.assertEqual(evidence["sha256"], sha(item))
+                    with patch("sys.argv", ["fixtures", provider, "--out", str(path)]):
+                        with self.assertRaises(CloudError):
+                            main()
+
     def test_wrong_aws_account_fails_before_inventory(self) -> None:
         cap = Capture(
             "aws", Native({"get-caller-identity": {"Account": "999999999999", "Arn": PRINCIPAL}})
