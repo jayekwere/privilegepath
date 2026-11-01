@@ -48,5 +48,6 @@
   "contract_sources": [
     "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html"
   ],
-  "hosted_ci": "https://github.com/jayekwere/privilegepath/actions/workflows/verify.yml"
+  "hosted_ci": "https://github.com/jayekwere/privilegepath/actions/workflows/verify.yml",
+  "hosted_ci_dependency_hardening": "Browser setup uses the official HTTPS Ubuntu archive mirror, bounded APT network timeouts and a five-minute step limit. This addresses a runner mirror timeout observed during this five-project audit; package signature verification remains enabled."
 }
