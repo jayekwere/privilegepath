@@ -76,3 +76,7 @@ Read-only AWS, Azure and GCP collectors now preserve native policy evidence and 
 AWS account acceptance exercised 14 native API calls and preserved a private native snapshot. It returned partial coverage because a policy used resource variables requiring context, and analysis retained `effective_permissions: not_proven`. [The live receipt](docs/aws-live-verification.json) records source commits and snapshot digest. Azure/GCP account acceptance remains unverified.
 
 The [security audit record](docs/security-audit.json) covers bounded wildcard analysis, malformed request containment, IAM resource-pattern fidelity and fixture provenance. The original offline sample output is unchanged.
+
+---
+
+**AI assistance:** AI tools helped with code or documentation.
